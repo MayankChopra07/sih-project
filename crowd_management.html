@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temple Crowd Management System</title>
+    <title>Temple Crowd Management with YOLOv8</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -417,6 +417,27 @@
             border-left: 4px solid var(--spiritual);
         }
 
+        /* YOLO Detection Canvas */
+        .detection-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .detection-stats {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 2;
+        }
+
         /* Chatbot */
         .chatbot-icon {
             position: fixed;
@@ -724,7 +745,7 @@
             <div class="dashboard-grid">
                 <div class="metric-card">
                     <i class="fas fa-users"></i>
-                    <h3>1,247</h3>
+                    <h3 id="liveCount">1,247</h3>
                     <p>Current Visitors</p>
                 </div>
                 <div class="metric-card">
@@ -778,7 +799,7 @@
                 <div class="progress-bar">
                     <div class="progress" id="uploadProgress"></div>
                 </div>
-                <button class="btn btn-primary" id="analyzeBtn" disabled>Analyze Video</button>
+                <button class="btn btn-primary" id="analyzeBtn" disabled>Analyze Video with YOLOv8</button>
             </div>
         </div>
     </section>
@@ -786,27 +807,37 @@
     <!-- Video Analytics -->
     <section class="video-analytics" id="analytics">
         <div class="container">
-            <h2 class="section-title">Video Analytics</h2>
+            <h2 class="section-title">Video Analytics with YOLOv8</h2>
             <div class="video-container">
-                <div class="video-player">
+                <div class="video-player" id="analysisPlayer">
                     <i class="fas fa-video" style="font-size: 3rem;"></i>
+                    <canvas class="detection-canvas" id="detectionCanvas"></canvas>
+                    <div class="detection-stats" id="detectionStats">
+                        <div>People Detected: <span id="peopleCount">0</span></div>
+                        <div>Confidence: <span id="confidence">0%</span></div>
+                    </div>
                     <div class="video-overlay">
-                        <h3>Live Temple Feed</h3>
-                        <p>People Detected: 47 | Density: Medium</p>
+                        <h3>YOLOv8 People Detection</h3>
+                        <p>Real-time crowd analysis using AI</p>
                     </div>
                 </div>
                 <div class="analytics-data">
                     <div class="data-card">
                         <h3>Crowd Density</h3>
-                        <p>Medium - 42 people detected in main area</p>
+                        <p id="densityInfo">No data available</p>
                     </div>
                     <div class="data-card">
                         <h3>Movement Flow</h3>
-                        <p>Steady - Normal entry and exit patterns</p>
+                        <p id="movementInfo">No data available</p>
                     </div>
                     <div class="data-card">
                         <h3>Alert Status</h3>
-                        <p>No alerts - All areas within safe limits</p>
+                        <p id="alertInfo">No alerts - Upload a video to analyze</p>
+                    </div>
+                    <div class="data-card">
+                        <h3>Analysis Controls</h3>
+                        <button class="btn btn-primary" id="startDetection" disabled>Start Detection</button>
+                        <button class="btn btn-outline" id="stopDetection" disabled>Stop Detection</button>
                     </div>
                 </div>
             </div>
@@ -933,6 +964,9 @@
         </div>
     </footer>
 
+    <!-- Load YOLOv8 Script -->
+    <script src="yolov8-detector.js"></script>
+    
     <script>
         // Smooth scrolling for navigation links
         document.querySelectorAll('nav a').forEach(anchor => {
@@ -1083,6 +1117,10 @@
         const uploadStatus = document.getElementById('uploadStatus');
         const uploadProgress = document.getElementById('uploadProgress');
         const analyzeBtn = document.getElementById('analyzeBtn');
+        const startDetectionBtn = document.getElementById('startDetection');
+        const stopDetectionBtn = document.getElementById('stopDetection');
+
+        let currentVideoFile = null;
 
         browseBtn.addEventListener('click', () => {
             videoFile.click();
@@ -1129,6 +1167,9 @@
                 return;
             }
             
+            // Store the file for later use
+            currentVideoFile = file;
+            
             // Display file info
             fileName.textContent = file.name;
             fileSize.textContent = formatFileSize(file.size);
@@ -1141,8 +1182,8 @@
             // Show upload details
             uploadDetails.style.display = 'block';
             
-            // Simulate upload process
-            simulateUpload();
+            // Enable analysis button
+            analyzeBtn.disabled = false;
         }
 
         function formatFileSize(bytes) {
@@ -1151,32 +1192,93 @@
             else return (bytes / 1048576).toFixed(1) + ' MB';
         }
 
-        function simulateUpload() {
-            let progress = 0;
-            uploadStatus.textContent = 'Uploading...';
-            analyzeBtn.disabled = true;
-            
-            const interval = setInterval(() => {
-                progress += 5;
-                uploadProgress.style.width = progress + '%';
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    uploadStatus.textContent = 'Upload complete! Ready for analysis';
-                    analyzeBtn.disabled = false;
-                }
-            }, 200);
-        }
-
         analyzeBtn.addEventListener('click', () => {
-            uploadStatus.textContent = 'Analyzing video with AI...';
+            if (!currentVideoFile) {
+                alert('Please select a video file first');
+                return;
+            }
             
-            // Simulate analysis process
-            setTimeout(() => {
-                uploadStatus.textContent = 'Analysis complete! 42 people detected.';
-                alert('Video analysis complete! The system detected 42 people in the video.');
-            }, 3000);
+            uploadStatus.textContent = 'Preparing YOLOv8 for analysis...';
+            
+            // Initialize YOLOv8 detector
+            yolov8Detector.init().then(() => {
+                uploadStatus.textContent = 'YOLOv8 loaded successfully! Click "Start Detection" to begin.';
+                startDetectionBtn.disabled = false;
+                
+                // Set up the video for analysis
+                const videoURL = URL.createObjectURL(currentVideoFile);
+                const analysisPlayer = document.getElementById('analysisPlayer');
+                analysisPlayer.innerHTML = `
+                    <video id="analysisVideo" controls style="width: 100%; height: 100%;">
+                        <source src="${videoURL}" type="${currentVideoFile.type}">
+                    </video>
+                    <canvas class="detection-canvas" id="detectionCanvas"></canvas>
+                    <div class="detection-stats" id="detectionStats">
+                        <div>People Detected: <span id="peopleCount">0</span></div>
+                        <div>Confidence: <span id="confidence">0%</span></div>
+                    </div>
+                    <div class="video-overlay">
+                        <h3>YOLOv8 People Detection</h3>
+                        <p>Real-time crowd analysis using AI</p>
+                    </div>
+                `;
+            }).catch(error => {
+                uploadStatus.textContent = 'Error loading YOLOv8: ' + error.message;
+            });
         });
+
+        startDetectionBtn.addEventListener('click', () => {
+            const video = document.getElementById('analysisVideo');
+            const canvas = document.getElementById('detectionCanvas');
+            
+            if (!video || !canvas) {
+                alert('Please upload and analyze a video first');
+                return;
+            }
+            
+            startDetectionBtn.disabled = true;
+            stopDetectionBtn.disabled = false;
+            
+            // Start YOLOv8 detection
+            yolov8Detector.startDetection(video, canvas, (detections) => {
+                // Update detection stats
+                document.getElementById('peopleCount').textContent = detections.length;
+                document.getElementById('confidence').textContent = 
+                    detections.length > 0 ? 
+                    Math.round(detections.reduce((sum, d) => sum + d.confidence, 0) / detections.length * 100) + '%' : 
+                    '0%';
+                
+                // Update analytics data
+                updateAnalyticsData(detections);
+            });
+        });
+
+        stopDetectionBtn.addEventListener('click', () => {
+            yolov8Detector.stopDetection();
+            startDetectionBtn.disabled = false;
+            stopDetectionBtn.disabled = true;
+        });
+
+        function updateAnalyticsData(detections) {
+            const count = detections.length;
+            let density = 'Low';
+            let movement = 'Normal';
+            let alert = 'No alerts';
+            
+            if (count > 50) {
+                density = 'High';
+                alert = 'High crowd density detected';
+            } else if (count > 20) {
+                density = 'Medium';
+            }
+            
+            document.getElementById('densityInfo').textContent = `${density} - ${count} people detected`;
+            document.getElementById('movementInfo').textContent = movement;
+            document.getElementById('alertInfo').textContent = alert;
+            
+            // Update live count in dashboard
+            document.getElementById('liveCount').textContent = count;
+        }
 
         // Chatbot functionality
         const chatbotIcon = document.getElementById('chatbotIcon');
@@ -1224,19 +1326,22 @@
                     
                     // Simple response logic
                     if (message.toLowerCase().includes('crowd') || message.toLowerCase().includes('people')) {
-                        botMessage.textContent = 'Current crowd levels are moderate. The main temple area has about 45 visitors.';
+                        const count = document.getElementById('peopleCount').textContent;
+                        botMessage.textContent = `Current crowd detection shows ${count} people.`;
                     } else if (message.toLowerCase().includes('time') || message.toLowerCase().includes('wait')) {
                         botMessage.textContent = 'The estimated wait time for darshan is currently 15 minutes.';
                     } else if (message.toLowerCase().includes('emergency') || message.toLowerCase().includes('help')) {
-                        botMessage.textContent = 'For emergencies, please contact temple security at 1800-123-4567 or use the panic button on the dashboard.';
+                        botMessage.textContent = 'For emergencies, please contact temple security at 1800-123-4567.';
                     } else if (message.toLowerCase().includes('upload') || message.toLowerCase().includes('video')) {
-                        botMessage.textContent = 'You can upload pre-recorded temple videos for crowd analysis. Go to the Video Upload section to get started.';
+                        botMessage.textContent = 'You can upload temple videos for crowd analysis using YOLOv8 AI. Go to the Video Upload section to get started.';
                     } else if (message.toLowerCase().includes('temple') || message.toLowerCase().includes('timing')) {
                         botMessage.textContent = 'Temple timings are 6:00 AM to 9:00 PM. Special aarti timings are 7:00 AM and 7:00 PM.';
                     } else if (message.toLowerCase().includes('hello') || message.toLowerCase().includes('hi')) {
                         botMessage.textContent = 'Hello! How can I assist you with temple information today?';
+                    } else if (message.toLowerCase().includes('yolo') || message.toLowerCase().includes('ai')) {
+                        botMessage.textContent = 'We use YOLOv8, a state-of-the-art AI model, for real-time people detection in temple crowds.';
                     } else {
-                        botMessage.textContent = 'I can help with crowd information, wait times, temple timings, video uploads, and emergency contacts. What would you like to know?';
+                        botMessage.textContent = 'I can help with crowd information, wait times, temple timings, video analysis, and emergency contacts. What would you like to know?';
                     }
                     
                     chatbotMessages.appendChild(botMessage);
