@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temple Crowd Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-place-of-worship"></i>
+                    <h1>Temple Crowd Management</h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#home" class="nav-link active">Home</a></li>
+                        <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
+                        <li><a href="#upload" class="nav-link">AI Analysis</a></li>
+                        <li><a href="#temples" class="nav-link">Temples</a></li>
+                        <li><a href="#analytics" class="nav-link">Analytics</a></li>
+                    </ul>
+                </nav>
+                <div class="auth-buttons">
+                    <button class="btn btn-outline" id="loginBtn">Admin Login</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h2>AI-Powered Temple Crowd Management</h2>
+                <p>Using YOLOv8 AI to ensure safe and comfortable pilgrimage experiences with real-time crowd monitoring and analytics.</p>
+                <button class="btn btn-primary" id="getStartedBtn">Get Started</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Temple Dashboard -->
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <h2 class="section-title">Live Temple Dashboard</h2>
+            <div class="dashboard-grid" id="templeDashboard">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Analysis Section -->
+    <section class="video-upload-section" id="upload">
+        <div class="container">
+            <h2 class="section-title">AI Crowd Analysis</h2>
+            <p class="section-subtitle">Upload temple footage for real-time people counting using YOLOv8</p>
+            
+            <div class="upload-container">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>Upload Temple Video/Image</h3>
+                    <p>Drag & drop your file here or click to browse</p>
+                    <p class="file-info">Supported: MP4, MOV, AVI, JPG, PNG (Max 500MB)</p>
+                    <input type="file" id="fileInput" accept="video/*,image/*" style="display: none;">
+                    <button class="upload-btn" id="browseBtn">Select File</button>
+                </div>
+                
+                <div class="video-preview" id="previewArea">
+                    <i class="fas fa-video" id="previewIcon"></i>
+                    <p id="previewText">File preview will appear here</p>
+                </div>
+            </div>
+            
+            <div class="upload-details" id="uploadDetails" style="display: none;">
+                <h3>Analysis Details</h3>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <label>File:</label>
+                        <span id="fileName">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Size:</label>
+                        <span id="fileSize">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Status:</label>
+                        <span id="uploadStatus">Ready for analysis</span>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="uploadProgress"></div>
+                    </div>
+                    <span id="progressText">0%</span>
+                </div>
+                <button class="btn btn-primary" id="analyzeBtn" disabled>
+                    <i class="fas fa-brain"></i> Analyze with YOLOv8 AI
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analysis Results -->
+    <section class="video-analytics" id="analytics">
+        <div class="container">
+            <h2 class="section-title">AI Analysis Results</h2>
+            <div class="video-container">
+                <div class="video-player" id="analysisPlayer">
+                    <div class="player-placeholder">
+                        <i class="fas fa-chart-bar"></i>
+                        <p>Processed video will appear here after analysis</p>
+                    </div>
+                    <canvas class="detection-canvas" id="detectionCanvas"></canvas>
+                    <div class="detection-stats" id="detectionStats">
+                        <div>People Detected: <span id="peopleCount">0</span></div>
+                        <div>Density Level: <span id="densityLevel">-</span></div>
+                        <div>Confidence: <span id="confidence">-</span></div>
+                    </div>
+                </div>
+                <div class="analytics-data">
+                    <div class="data-card">
+                        <h3><i class="fas fa-users"></i> Crowd Density</h3>
+                        <p id="densityInfo">No data available</p>
+                    </div>
+                    <div class="data-card">
+                        <h3><i class="fas fa-chart-line"></i> Statistics</h3>
+                        <p id="statsInfo">Upload a file to see statistics</p>
+                    </div>
+                    <div class="data-card">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Alert Status</h3>
+                        <p id="alertInfo">No alerts</p>
+                    </div>
+                    <div class="data-card">
+                        <h3><i class="fas fa-cogs"></i> Controls</h3>
+                        <div class="control-buttons">
+                            <button class="btn btn-primary" id="viewResultsBtn" disabled>View Results</button>
+                            <button class="btn btn-outline" id="downloadBtn" disabled>Download Report</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Temples Section -->
+    <section class="temples-section" id="temples">
+        <div class="container">
+            <h2 class="section-title">Managed Temples</h2>
+            <div class="temples-grid" id="templesGrid">
+                <!-- Dynamic temple cards will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Analytics -->
+    <section class="recent-analytics">
+        <div class="container">
+            <h2 class="section-title">Recent Analysis History</h2>
+            <div class="analytics-table">
+                <table id="analyticsTable">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>People Count</th>
+                            <th>Density</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analyticsBody">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Alerts Section -->
+    <section class="alerts-section">
+        <div class="container">
+            <h2 class="section-title">Recent Alerts</h2>
+            <div class="alerts-container" id="alertsContainer">
+                <!-- Dynamic alerts will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Temple Crowd Management</h3>
+                    <p>AI-powered crowd monitoring system for safe pilgrimage experiences.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Technology Stack</h3>
+                    <p>YOLOv8 AI • Flask • SQLite • OpenCV</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p>Email: info@templecrowd.ai</p>
+                    <p>Phone: +91 98765 43210</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 Temple Crowd Management System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner-content">
+            <i class="fas fa-cog fa-spin"></i>
+            <p>Processing with YOLOv8 AI...</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
