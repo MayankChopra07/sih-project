@@ -120,6 +120,7 @@ class YOLOv8Detector:
             "filename": filename,
             "original_path": video_path,
             "processed_path": output_path,
+            "web_video_url": f"/video/{output_filename}",  # ADDED: Web-accessible URL
             "average_people": final_avg,
             "density_level": final_density,
             "total_frames": frame_count,
@@ -135,6 +136,7 @@ class YOLOv8Detector:
         }
         
         print(f"Processing complete: {final_avg} people average, {final_density} density")
+        print(f"Processed video available at: {output_path}")
         return result
     
     def classify_density(self, count):
@@ -165,5 +167,6 @@ class YOLOv8Detector:
             "success": True,
             "people_count": people_count,
             "density_level": density_level,
-            "processed_path": output_path
+            "processed_path": output_path,
+            "web_image_url": f"/outputs/processed_{os.path.basename(image_path)}"  # ADDED: Web-accessible URL
         }

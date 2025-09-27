@@ -415,6 +415,125 @@ function showNotification(message, type) {
         setTimeout(() => notification.remove(), 300);
     }, 3000);
 }
+// Video control functions
+async function loadProcessedVideo() {
+    try {
+        const response = await fetch('/api/get-processed-video');
+        const data = await response.json();
+        
+        const videoElement = document.getElementById('processedVideo');
+        const placeholder = document.getElementById('videoPlaceholder');
+        
+        if (data.exists) {
+            // Show video and hide placeholder
+            videoElement.style.display = 'block';
+            placeholder.style.display = 'none';
+            
+            // Set video source with cache busting
+            videoElement.src = data.video_url + '?t=' + new Date().getTime();
+            videoElement.load();
+            
+            // Enable download button
+            document.getElementById('downloadBtn').disabled = false;
+            
+            console.log('Video loaded:', data.video_url);
+            showNotification('Processed video loaded successfully!', 'success');
+        } else {
+            // Show placeholder
+            videoElement.style.display = 'none';
+            placeholder.style.display = 'block';
+            placeholder.innerHTML = `<p>${data.message || 'No processed video available'}</p>`;
+            
+            document.getElementById('downloadBtn').disabled = true;
+        }
+        
+    } catch (error) {
+        console.error('Error loading video:', error);
+        showNotification('Error loading video: ' + error.message, 'error');
+    }
+}
+
+function refreshVideo() {
+    const videoElement = document.getElementById('processedVideo');
+    if (videoElement.src) {
+        videoElement.src += '?t=' + new Date().getTime();
+        videoElement.load();
+        showNotification('Video refreshed', 'info');
+    }
+}
+
+async function downloadVideo() {
+    try {
+        const response = await fetch('/api/get-processed-video');
+        const data = await response.json();
+        
+        if (data.exists) {
+            // Create a temporary link for download
+            const downloadLink = document.createElement('a');
+            downloadLink.href = data.video_url;
+            downloadLink.download = data.filename;
+            downloadLink.click();
+            
+            showNotification('Download started!', 'success');
+        } else {
+            showNotification('No video available for download', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error downloading video:', error);
+        showNotification('Error downloading video', 'error');
+    }
+}
+
+// Check video progress periodically
+async function checkVideoProgress() {
+    try {
+        const response = await fetch('/api/video-progress');
+        const data = await response.json();
+        
+        if (data.processed) {
+            // Video processing complete, enable view button
+            document.getElementById('viewResultsBtn').disabled = false;
+            document.getElementById('viewResultsBtn').textContent = 'View Results (' + data.count + ')';
+        }
+    } catch (error) {
+        console.error('Error checking video progress:', error);
+    }
+}
+
+// Utility function for notifications
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        color: white;
+        z-index: 1000;
+        background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        document.body.removeChild(notification);
+    }, 3000);
+}
+
+// Auto-check for processed videos every 10 seconds
+setInterval(checkVideoProgress, 10000);
+
+// Initial check when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    checkVideoProgress();
+    loadProcessedVideo(); // Try to load existing video
+});
 
 function handleNavigation(event) {
     event.preventDefault();

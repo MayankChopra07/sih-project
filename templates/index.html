@@ -107,46 +107,53 @@
     </section>
 
     <!-- Analysis Results -->
-    <section class="video-analytics" id="analytics">
-        <div class="container">
-            <h2 class="section-title">AI Analysis Results</h2>
-            <div class="video-container">
-                <div class="video-player" id="analysisPlayer">
-                    <div class="player-placeholder">
-                        <i class="fas fa-chart-bar"></i>
-                        <p>Processed video will appear here after analysis</p>
-                    </div>
-                    <canvas class="detection-canvas" id="detectionCanvas"></canvas>
-                    <div class="detection-stats" id="detectionStats">
-                        <div>People Detected: <span id="peopleCount">0</span></div>
-                        <div>Density Level: <span id="densityLevel">-</span></div>
-                        <div>Confidence: <span id="confidence">-</span></div>
-                    </div>
+<section class="video-analytics" id="analytics">
+    <div class="container">
+        <h2 class="section-title">AI Analysis Results</h2>
+        <div class="video-container">
+            <div class="video-player" id="analysisPlayer">
+                <!-- Video Element -->
+                <video id="processedVideo" controls style="display: none; width: 100%; height: auto;">
+                    Your browser does not support the video tag.
+                </video>
+                
+                <div class="player-placeholder" id="videoPlaceholder">
+                    <i class="fas fa-chart-bar"></i>
+                    <p>Processed video will appear here after analysis</p>
                 </div>
-                <div class="analytics-data">
-                    <div class="data-card">
-                        <h3><i class="fas fa-users"></i> Crowd Density</h3>
-                        <p id="densityInfo">No data available</p>
-                    </div>
-                    <div class="data-card">
-                        <h3><i class="fas fa-chart-line"></i> Statistics</h3>
-                        <p id="statsInfo">Upload a file to see statistics</p>
-                    </div>
-                    <div class="data-card">
-                        <h3><i class="fas fa-exclamation-triangle"></i> Alert Status</h3>
-                        <p id="alertInfo">No alerts</p>
-                    </div>
-                    <div class="data-card">
-                        <h3><i class="fas fa-cogs"></i> Controls</h3>
-                        <div class="control-buttons">
-                            <button class="btn btn-primary" id="viewResultsBtn" disabled>View Results</button>
-                            <button class="btn btn-outline" id="downloadBtn" disabled>Download Report</button>
-                        </div>
+                
+                <canvas class="detection-canvas" id="detectionCanvas"></canvas>
+                <div class="detection-stats" id="detectionStats">
+                    <div>People Detected: <span id="peopleCount">0</span></div>
+                    <div>Density Level: <span id="densityLevel">-</span></div>
+                    <div>Confidence: <span id="confidence">-</span></div>
+                </div>
+            </div>
+            <div class="analytics-data">
+                <div class="data-card">
+                    <h3><i class="fas fa-users"></i> Crowd Density</h3>
+                    <p id="densityInfo">No data available</p>
+                </div>
+                <div class="data-card">
+                    <h3><i class="fas fa-chart-line"></i> Statistics</h3>
+                    <p id="statsInfo">Upload a file to see statistics</p>
+                </div>
+                <div class="data-card">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Alert Status</h3>
+                    <p id="alertInfo">No alerts</p>
+                </div>
+                <div class="data-card">
+                    <h3><i class="fas fa-cogs"></i> Controls</h3>
+                    <div class="control-buttons">
+                        <button class="btn btn-primary" id="viewResultsBtn" onclick="loadProcessedVideo()">View Results</button>
+                        <button class="btn btn-outline" id="downloadBtn" onclick="downloadVideo()">Download Video</button>
+                        <button class="btn btn-outline" id="refreshBtn" onclick="refreshVideo()">Refresh</button>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
     <!-- Temples Section -->
     <section class="temples-section" id="temples">

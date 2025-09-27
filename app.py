@@ -1,10 +1,12 @@
-from flask import Flask, request, jsonify, render_template, send_file
+from flask import Flask, request, jsonify, render_template, send_file, send_from_directory
 from flask_cors import CORS
 import os
 import json
 from werkzeug.utils import secure_filename
 from yolov8_detector import YOLOv8Detector
 from database import Database
+import os
+from flask import send_file, send_from_directory
 
 app = Flask(__name__)
 CORS(app)
@@ -157,6 +159,70 @@ def serve_video(filename):
         return send_file(filename)
     except Exception as e:
         return jsonify({'error': str(e)}), 404
+
+# NEW ROUTES FOR VIDEO PLAYBACK
+@app.route('/video/<path:filename>')
+def serve_processed_video(filename):
+    """Serve processed video files from outputs directory"""
+    try:
+        return send_from_directory('static/outputs', filename)
+    except FileNotFoundError:
+        return jsonify({'error': 'Video file not found'}), 404
+
+@app.route('/api/get-processed-video')
+def get_processed_video():
+    """Get the latest processed video information"""
+    try:
+        outputs_dir = 'static/outputs'
+        if not os.path.exists(outputs_dir):
+            return jsonify({"exists": False, "message": "No processed videos yet"})
+        
+        # Find all processed video files
+        video_files = [f for f in os.listdir(outputs_dir) 
+                      if f.startswith('processed_') and f.endswith(('.mp4', '.avi', '.mov', '.mkv'))]
+        
+        if not video_files:
+            return jsonify({"exists": False, "message": "No processed videos found"})
+        
+        # Get the most recent file
+        latest_video = max(video_files, key=lambda x: os.path.getctime(os.path.join(outputs_dir, x)))
+        video_url = f"/video/{latest_video}"
+        
+        return jsonify({
+            "exists": True,
+            "video_url": video_url,
+            "filename": latest_video,
+            "full_path": os.path.join(outputs_dir, latest_video)
+        })
+        
+    except Exception as e:
+        return jsonify({"exists": False, "error": str(e)})
+
+@app.route('/api/download-video')
+def download_video():
+    """Download the processed video"""
+    try:
+        video_path = request.args.get('path', '')
+        if not video_path or not os.path.exists(video_path):
+            return jsonify({"error": "Video file not found"}), 404
+        
+        return send_file(video_path, as_attachment=True)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/video-progress')
+def video_progress():
+    """Check if video processing is complete"""
+    try:
+        outputs_dir = 'static/outputs'
+        if os.path.exists(outputs_dir):
+            video_files = [f for f in os.listdir(outputs_dir) 
+                          if f.startswith('processed_') and f.endswith(('.mp4', '.avi', '.mov', '.mkv'))]
+            return jsonify({"processed": len(video_files) > 0, "count": len(video_files)})
+        return jsonify({"processed": False, "count": 0})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 @app.route('/api/health')
 def health_check():
